@@ -398,6 +398,43 @@ const wrapMultiline = (text: string): string => {
   return text;
 };
 
+// Safe localStorage accessors (guard against non-browser or broken globals)
+const safeGetItem = (key: string): string | null => {
+  try {
+    if (typeof window === "undefined") return null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ls = (globalThis as any).localStorage;
+    if (!ls || typeof ls.getItem !== "function") return null;
+    return ls.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const safeSetItem = (key: string, value: string) => {
+  try {
+    if (typeof window === "undefined") return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ls = (globalThis as any).localStorage;
+    if (!ls || typeof ls.setItem !== "function") return;
+    ls.setItem(key, value);
+  } catch {
+    // noop
+  }
+};
+
+const safeRemoveItem = (key: string) => {
+  try {
+    if (typeof window === "undefined") return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ls = (globalThis as any).localStorage;
+    if (!ls || typeof ls.removeItem !== "function") return;
+    ls.removeItem(key);
+  } catch {
+    // noop
+  }
+};
+
 export default function HoverReceiver() {
   const [hoverBox, setHoverBox] = useState<Box>(null);
   const [hoverBoxes, setHoverBoxes] = useState<Box[]>([]);
@@ -406,7 +443,7 @@ export default function HoverReceiver() {
   const [isVisualEditMode, setIsVisualEditMode] = useState(() => {
     // Initialize from localStorage if available
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(VISUAL_EDIT_MODE_KEY);
+      const stored = safeGetItem(VISUAL_EDIT_MODE_KEY);
       return stored === "true";
     }
     return false;
@@ -455,9 +492,7 @@ export default function HoverReceiver() {
   useEffect(() => {
     isVisualEditModeRef.current = isVisualEditMode;
     // Persist to localStorage
-    if (typeof window !== "undefined") {
-      localStorage.setItem(VISUAL_EDIT_MODE_KEY, String(isVisualEditMode));
-    }
+    safeSetItem(VISUAL_EDIT_MODE_KEY, String(isVisualEditMode));
   }, [isVisualEditMode]);
 
   // On mount, notify parent if visual edit mode was restored from localStorage
@@ -480,7 +515,7 @@ export default function HoverReceiver() {
       setTimeout(() => {
         if (typeof window !== "undefined") {
           // Restore focused element
-          const focusedData = localStorage.getItem(FOCUSED_ELEMENT_KEY);
+          const focusedData = safeGetItem(FOCUSED_ELEMENT_KEY);
           if (focusedData) {
             try {
               const { id } = JSON.parse(focusedData);
@@ -1534,15 +1569,12 @@ export default function HoverReceiver() {
         setFocusTag(tagName);
 
         // Save focused element info to localStorage
-        if (hitId && typeof window !== "undefined") {
+        if (hitId) {
           const focusedElementData = {
             id: hitId,
             tag: tagName,
           };
-          localStorage.setItem(
-            FOCUSED_ELEMENT_KEY,
-            JSON.stringify(focusedElementData)
-          );
+          safeSetItem(FOCUSED_ELEMENT_KEY, JSON.stringify(focusedElementData));
         }
 
         // Find ALL other elements with the same orchids ID and show hover boxes
@@ -1755,9 +1787,7 @@ export default function HoverReceiver() {
           setHoverTag(null);
 
           // Clear focused element from localStorage
-          if (typeof window !== "undefined") {
-            localStorage.removeItem(FOCUSED_ELEMENT_KEY);
-          }
+          safeRemoveItem(FOCUSED_ELEMENT_KEY);
 
           // Notify parent that focus was cleared
           const msg: ChildToParent = {
@@ -1828,9 +1858,9 @@ export default function HoverReceiver() {
         setIsVisualEditMode(newMode);
 
         // Clear localStorage if visual edit mode is being turned off
-        if (!newMode && typeof window !== "undefined") {
-          localStorage.removeItem(VISUAL_EDIT_MODE_KEY);
-          localStorage.removeItem(FOCUSED_ELEMENT_KEY);
+        if (!newMode) {
+          safeRemoveItem(VISUAL_EDIT_MODE_KEY);
+          safeRemoveItem(FOCUSED_ELEMENT_KEY);
         }
 
         // Send acknowledgement back to parent so it knows we received the mode change

@@ -1,6 +1,35 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 
+// Node may be started with an experimental `--localstorage-file` flag
+// which can leave `globalThis.localStorage` present but missing the
+// standard Storage methods. Defensive shim: if `localStorage` exists
+// but `getItem` is not a function, replace it with an in-memory shim
+// so server-side code that checks for `localStorage` won't throw.
+try {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const g: any = globalThis as any;
+  if (g && g.localStorage && typeof g.localStorage.getItem !== "function") {
+    const _map = new Map<string, string>();
+    g.localStorage = {
+      getItem(key: string) {
+        return _map.has(key) ? _map.get(key) ?? null : null;
+      },
+      setItem(key: string, value: string) {
+        _map.set(key, String(value));
+      },
+      removeItem(key: string) {
+        _map.delete(key);
+      },
+      clear() {
+        _map.clear();
+      },
+    };
+  }
+} catch {
+  // ignore
+}
+
 const LOADER = path.resolve(__dirname, 'src/visual-edits/component-tagger-loader.js');
 
 const nextConfig: NextConfig = {
