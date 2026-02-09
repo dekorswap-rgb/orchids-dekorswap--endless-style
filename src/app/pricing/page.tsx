@@ -90,14 +90,14 @@ export default function Pricing() {
           >
             Endless Style
           </motion.div>
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-6xl font-bold text-primary mb-6"
           >
             Simple, transparent pricing.
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -115,11 +115,10 @@ export default function Pricing() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className={`relative flex flex-col p-8 rounded-3xl border-2 transition-all ${
-                tier.popular 
-                  ? "border-accent bg-white shadow-2xl scale-105 z-10" 
+              className={`relative flex flex-col p-8 rounded-3xl border-2 transition-all ${tier.popular
+                  ? "border-accent bg-white shadow-2xl scale-105 z-10"
                   : "border-border bg-brand-offwhite/50 hover:border-accent/30"
-              }`}
+                }`}
             >
               {tier.popular && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -128,7 +127,7 @@ export default function Pricing() {
                   </Badge>
                 </div>
               )}
-              
+
               <div className="mb-8">
                 <h3 className="text-2xl font-bold text-primary mb-2">{tier.name}</h3>
                 <div className="flex items-baseline gap-1 mb-4">
@@ -153,12 +152,11 @@ export default function Pricing() {
                 </ul>
               </div>
 
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 variant={tier.popular ? "default" : "outline"}
-                className={`w-full rounded-full h-14 font-bold ${
-                  tier.popular ? "bg-accent hover:bg-accent/90" : "border-primary/20 hover:bg-primary/5 text-primary"
-                }`}
+                className={`w-full rounded-full h-14 font-bold ${tier.popular ? "bg-accent hover:bg-accent/90" : "border-primary/20 hover:bg-primary/5 text-primary"
+                  }`}
               >
                 {tier.cta}
               </Button>
@@ -172,7 +170,7 @@ export default function Pricing() {
             <h2 className="text-3xl font-bold text-primary mb-4">What's included in every plan</h2>
             <div className="h-1 w-20 bg-accent mx-auto rounded-full" />
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { title: "Free Swaps", desc: "Easily swap your items every month with no extra fees." },
@@ -212,8 +210,10 @@ export default function Pricing() {
           <div className="mt-20 text-center p-12 bg-accent/5 rounded-[2rem] border border-accent/10">
             <h3 className="text-2xl font-bold text-primary mb-4">Still have questions?</h3>
             <p className="text-muted-foreground mb-8">We're here to help you create your dream home.</p>
-            <Button variant="link" className="text-accent font-bold text-lg group">
-              Contact our support team <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
+            <Button variant="link" className="text-accent font-bold text-lg group" asChild>
+              <a href="mailto:dekorswap+support@gmail.com">
+                Contact our support team <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
+              </a>
             </Button>
           </div>
         </section>

@@ -7,22 +7,23 @@ export default function Footer() {
     <footer className="bg-brand-charcoal text-brand-offwhite pt-20 pb-10 px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
         <div className="col-span-1 md:col-span-1">
-            <Link href="/" className="flex items-center gap-2 mb-6 group">
-              <div className="relative w-10 h-10 transition-transform group-hover:scale-110">
-                <Image 
-                  src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/render/image/public/project-uploads/8c7b33be-37df-4a52-ae5e-d0f22cc7ae10/D2-1769327260618.png?width=8000&height=8000&resize=contain"
-                  alt="DekorSwap Logo"
-                  fill
-                  className="object-contain brightness-0 invert"
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xl font-bold tracking-tight leading-none">DekorSwap</span>
-                <span className="text-[10px] uppercase tracking-[0.2em] text-accent font-semibold mt-1">
-                  Endless Style
-                </span>
-              </div>
-            </Link>
+          <Link href="/" className="flex items-center gap-2 mb-6 group">
+            <div className="relative w-10 h-10 transition-transform group-hover:scale-110">
+              <Image
+                src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/render/image/public/project-uploads/8c7b33be-37df-4a52-ae5e-d0f22cc7ae10/D2-1769327260618.png?width=8000&height=8000&resize=contain"
+                alt="DekorSwap Logo"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold tracking-tight leading-none">DekorSwap</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-accent font-semibold mt-1">
+                Endless Style
+              </span>
+            </div>
+          </Link>
           <p className="text-brand-offwhite/60 text-sm leading-relaxed mb-6">
             Endless style for your home. Curated décor delivered monthly, keeping your space fresh and clutter-free.
           </p>

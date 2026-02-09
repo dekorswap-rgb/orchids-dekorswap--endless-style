@@ -1,12 +1,125 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Send, Instagram, Facebook, Twitter } from "lucide-react";
+import { Mail, Phone, MapPin, Send, Instagram, Facebook, Twitter, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import emailjs from "@emailjs/browser";
+
+// EmailJS Configuration - same as get-started page
+const EMAILJS_SERVICE_ID = "service_skohlrk";
+const EMAILJS_TEMPLATE_ID_CONTACT = "template_s5u472g"; // Business email template
+const EMAILJS_CUSTOMER_TEMPLATE_ID = "template_s5u472g"; // Customer confirmation template
+const EMAILJS_PUBLIC_KEY = "IkC3SxbZdfzynJdTs";
 
 export default function Contact() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+
+    // Validate required fields
+    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+      setError("Please fill in all fields");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      // Prepare email data for business (to you)
+      const businessEmailData = {
+        from_name: formData.name,
+        from_email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+        timestamp: new Date().toLocaleString(),
+        form_type: "Contact Form",
+      };
+
+      // Prepare email data for customer confirmation
+      const customerEmailData = {
+        to_name: formData.name,
+        to_email: formData.email,
+        subject: formData.subject,
+        message_preview: formData.message.substring(0, 100) + (formData.message.length > 100 ? "..." : ""),
+      };
+
+      // Send inquiry email to business (dekorswap@gmail.com)
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID_CONTACT,
+        businessEmailData,
+        EMAILJS_PUBLIC_KEY
+      );
+
+      // Send confirmation email to customer
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_CUSTOMER_TEMPLATE_ID,
+        customerEmailData,
+        EMAILJS_PUBLIC_KEY
+      );
+
+      setIsSuccess(true);
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        subject: "",
+        message: "",
+      });
+    } catch (err) {
+      console.error("Email send error:", err);
+      setError("Failed to send message. Please try again or email us directly at dekorswap@gmail.com");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Success state
+  if (isSuccess) {
+    return (
+      <div className="pt-32 pb-24 px-6 min-h-screen flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-2xl mx-auto text-center"
+        >
+          <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 size={48} className="text-green-600" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-primary mb-6">
+            Message sent successfully!
+          </h1>
+          <p className="text-lg text-muted-foreground mb-8">
+            Thank you for reaching out. We've received your message and will get back to you within 24 hours.
+            Check your email for confirmation.
+          </p>
+          <Button
+            size="lg"
+            className="rounded-full px-8 bg-primary"
+            onClick={() => setIsSuccess(false)}
+          >
+            Send Another Message
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="pt-32 pb-24 px-6">
       <div className="max-w-7xl mx-auto">
@@ -68,8 +181,8 @@ export default function Contact() {
                   { icon: <Facebook size={20} />, label: "Facebook" },
                   { icon: <Twitter size={20} />, label: "Twitter" }
                 ].map((social, i) => (
-                  <button 
-                    key={i} 
+                  <button
+                    key={i}
                     className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-white hover:border-accent transition-all"
                     aria-label={social.label}
                   >
@@ -88,33 +201,79 @@ export default function Contact() {
             className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl border border-border/50 relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-bl-[5rem] -z-10" />
-            
+
             <h2 className="text-2xl font-bold text-primary mb-8">Send us a message</h2>
-            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-primary ml-1">Full Name</label>
-                  <Input placeholder="John Doe" className="rounded-xl border-border focus:ring-accent" />
+                  <label className="text-sm font-bold text-primary ml-1">Full Name <span className="text-accent">*</span></label>
+                  <Input
+                    placeholder="John Doe"
+                    className="rounded-xl border-border focus:ring-accent"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-primary ml-1">Email Address</label>
-                  <Input type="email" placeholder="john@example.com" className="rounded-xl border-border focus:ring-accent" />
+                  <label className="text-sm font-bold text-primary ml-1">Email Address <span className="text-accent">*</span></label>
+                  <Input
+                    type="email"
+                    placeholder="john@example.com"
+                    className="rounded-xl border-border focus:ring-accent"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
-                <label className="text-sm font-bold text-primary ml-1">Subject</label>
-                <Input placeholder="Inquiry about Standard Plan" className="rounded-xl border-border focus:ring-accent" />
+                <label className="text-sm font-bold text-primary ml-1">Subject <span className="text-accent">*</span></label>
+                <Input
+                  placeholder="Inquiry about Standard Plan"
+                  className="rounded-xl border-border focus:ring-accent"
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  required
+                />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-primary ml-1">Message</label>
-                <Textarea placeholder="Tell us about your space and what you're looking for..." className="min-h-[150px] rounded-xl border-border focus:ring-accent" />
+                <label className="text-sm font-bold text-primary ml-1">Message <span className="text-accent">*</span></label>
+                <Textarea
+                  placeholder="Tell us about your space and what you're looking for..."
+                  className="min-h-[150px] rounded-xl border-border focus:ring-accent"
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  required
+                />
               </div>
 
-              <Button size="lg" className="w-full rounded-full h-14 bg-primary text-lg font-bold group">
-                Send Message
-                <Send size={18} className="ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              {/* Error Message */}
+              {error && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                size="lg"
+                disabled={isSubmitting}
+                className="w-full rounded-full h-14 bg-primary text-lg font-bold group"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 animate-spin" size={18} />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    Send Message
+                    <Send size={18} className="ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                  </>
+                )}
               </Button>
             </form>
           </motion.div>

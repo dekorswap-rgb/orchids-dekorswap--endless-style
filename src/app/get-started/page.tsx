@@ -13,7 +13,7 @@ import emailjs from "@emailjs/browser";
 // Initialize EmailJS with your public key
 // You'll need to replace these with your actual EmailJS credentials
 const EMAILJS_SERVICE_ID = "service_skohlrk"; // Your service ID
-const EMAILJS_TEMPLATE_ID = "template_s5u472g"; // Template for business (to you)
+const EMAILJS_TEMPLATE_ID = "template_or9livy"; // Template for business (to you)
 const EMAILJS_CUSTOMER_TEMPLATE_ID = "template_or9livy"; // Template for customer confirmation (create this)
 const EMAILJS_PUBLIC_KEY = "IkC3SxbZdfzynJdTs"; // Your public key
 

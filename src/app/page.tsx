@@ -58,9 +58,11 @@ export default function Home() {
                   <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="rounded-full px-8 h-14 text-lg border-primary/20 hover:bg-primary/5">
-                How It Works
-              </Button>
+              <Link href="/how-it-works">
+                <Button size="lg" variant="outline" className="rounded-full px-8 h-14 text-lg border-primary/20 hover:bg-primary/5">
+                  How It Works
+                </Button>
+              </Link>
             </motion.div>
           </motion.div>
 
@@ -188,7 +190,7 @@ export default function Home() {
                 name: "Tapered Clay Planter"
               },
               {
-                img: "https://images.unsplash.com/photo-1513519247388-193ad51f50ab?auto=format&fit=crop&q=80&w=600",
+                img: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&q=80&w=600",
                 tag: "Art",
                 name: "Minimalist Line Art"
               }
@@ -243,7 +245,7 @@ export default function Home() {
               </Button>
             </Link>
             <Link href="/pricing">
-              <Button size="lg" variant="outline" className="rounded-full px-10 h-16 text-lg border-white/20 hover:bg-white/10 text-white w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="rounded-full px-10 h-16 text-lg border-white/20 hover:bg-white/10 text-black w-full sm:w-auto">
                 View Pricing
               </Button>
             </Link>
