@@ -64,12 +64,8 @@ const nextConfig: NextConfig = {
   // Produce a static export when running `next build`.
   // This replaces the removed `next export` CLI in Next 15+.
   output: 'export',
-  // GitHub Pages deployment configuration
-  // basePath and assetPrefix must match exactly (no trailing slash on assetPrefix)
-  ...(process.env.NODE_ENV === 'production' ? {
-    basePath: '/dekor-swap',
-    assetPrefix: '/dekor-swap',
-  } : {}),
+  // Custom domain configuration (dekorswap.com)
+  // No basePath needed - site is served from root of custom domain
   trailingSlash: true
 };
 
