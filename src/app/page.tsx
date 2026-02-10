@@ -275,16 +275,17 @@ export default function Home() {
           <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto">
             Subscribe to our newsletter for home styling tips and be the first to know about new collections.
           </p>
-          <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto" onSubmit={(e) => e.preventDefault()}>
-            <input
-              type="email"
-              placeholder="Your email address"
-              className="flex-grow px-6 py-4 rounded-full border border-border focus:outline-none focus:ring-2 focus:ring-accent bg-white"
-            />
-            <Button size="lg" className="rounded-full px-8 bg-primary">
-              Subscribe
+          <div className="flex justify-center">
+            <Button
+              size="lg"
+              className="rounded-full px-10 bg-primary text-lg"
+              asChild
+            >
+              <a href="mailto:dekorswap@gmail.com?subject=Newsletter%20Subscription%20Request&body=Hi%20DekorSwap%20Team%2C%0A%0AI%27d%20love%20to%20subscribe%20to%20your%20newsletter%20and%20stay%20updated%20on%20the%20latest%20home%20d%C3%A9cor%20trends%2C%20styling%20tips%2C%20and%20new%20collections.%0A%0APlease%20add%20me%20to%20your%20mailing%20list!%0A%0AThank%20you%2C%0A">
+                Subscribe to Newsletter
+              </a>
             </Button>
-          </form>
+          </div>
         </div>
       </section>
     </div>
