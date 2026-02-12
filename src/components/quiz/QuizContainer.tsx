@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import QuizResults from "./QuizResults";
+import QuizResults from "@/components/quiz/QuizResults";
 
 interface QuizOption {
     id: string;
