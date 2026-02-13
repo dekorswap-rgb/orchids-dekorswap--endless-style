@@ -20,11 +20,17 @@ export default function QuizResults({ styleScores, styles, answers }: QuizResult
     const secondaryStyleId = Object.entries(styleScores).sort(([, a], [, b]) => b - a)[1]?.[0];
     const secondaryStyle = styles[secondaryStyleId];
 
+    // Get the room from the first question (q1)
+    const selectedRoom = answers["q1"];
+
     const handleRestart = () => {
         window.location.reload();
     };
 
     if (!topStyle) return null;
+
+    // Build catalog URL with style and room filters
+    const catalogUrl = `/catalog?style=${topStyleId}${selectedRoom ? `&room=${selectedRoom}` : ''}`;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-background py-20 px-6">
@@ -33,12 +39,13 @@ export default function QuizResults({ styleScores, styles, answers }: QuizResult
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
                     className="text-center mb-16"
                 >
                     <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        transition={{ delay: 0.2, type: "spring" }}
+                        transition={{ delay: 0.3, type: "spring", duration: 0.6 }}
                         className="inline-flex items-center justify-center w-20 h-20 bg-accent/10 rounded-full mb-6"
                     >
                         <Sparkles className="w-10 h-10 text-accent" />
@@ -55,7 +62,7 @@ export default function QuizResults({ styleScores, styles, answers }: QuizResult
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
+                    transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
                     className="bg-white rounded-3xl overflow-hidden shadow-2xl mb-8"
                 >
                     <div className="aspect-[21/9] relative">
@@ -119,10 +126,10 @@ export default function QuizResults({ styleScores, styles, answers }: QuizResult
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
+                    transition={{ delay: 0.6, duration: 0.5, ease: "easeOut" }}
                     className="flex flex-col sm:flex-row gap-4 justify-center"
                 >
-                    <Link href="/catalog">
+                    <Link href={catalogUrl}>
                         <Button size="lg" className="rounded-full px-8 h-14 text-lg bg-accent group">
                             Browse {topStyle.name} Items
                             <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />

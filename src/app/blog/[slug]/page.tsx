@@ -1,12 +1,11 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Clock, ArrowLeft, Share2 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
+import fs from "fs";
+import path from "path";
 
 interface BlogPost {
     id: string;
@@ -22,50 +21,69 @@ interface BlogPost {
     content: string;
 }
 
+// Generate static params for all blog posts
+export async function generateStaticParams() {
+    const indexPath = path.join(process.cwd(), "public/data/blogs/index.json");
+    const indexData = fs.readFileSync(indexPath, "utf-8");
+    const index = JSON.parse(indexData);
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
-    const [blog, setBlog] = useState<BlogPost | null>(null);
-    const [allBlogs, setAllBlogs] = useState<BlogPost[]>([]);
+    return index.blogs.map((blog: any) => ({
+        slug: blog.slug,
+    }));
+}
 
-    useEffect(() => {
-        async function loadBlog() {
-            try {
-                const indexRes = await fetch("/data/blogs/index.json");
-                const index = await indexRes.json();
+// Load blog data server-side
+async function getBlogData(slug: string) {
+    try {
+        const indexPath = path.join(process.cwd(), "public/data/blogs/index.json");
+        const indexData = fs.readFileSync(indexPath, "utf-8");
+        const index = JSON.parse(indexData);
 
-                const blogItem = index.blogs.find((b: any) => b.slug === params.slug);
-                if (!blogItem) return;
+        const blogItem = index.blogs.find((b: any) => b.slug === slug);
+        if (!blogItem) return null;
 
-                const res = await fetch(`/data/blogs/${blogItem.id}.json`);
-                const blogData = await res.json();
-                setBlog(blogData);
+        const blogPath = path.join(process.cwd(), `public/data/blogs/${blogItem.id}.json`);
+        const blogData = fs.readFileSync(blogPath, "utf-8");
+        const blog = JSON.parse(blogData);
 
-                // Load all blogs for related posts
-                const blogPromises = index.blogs.map(async (b: any) => {
-                    const r = await fetch(`/data/blogs/${b.id}.json`);
-                    return r.json();
-                });
-                const blogs = await Promise.all(blogPromises);
-                setAllBlogs(blogs.filter((b) => b.slug !== params.slug));
-            } catch (error) {
-                console.error("Error loading blog:", error);
-            }
-        }
+        // Load all blogs for related posts
+        const allBlogs = index.blogs.map((b: any) => {
+            const p = path.join(process.cwd(), `public/data/blogs/${b.id}.json`);
+            const data = fs.readFileSync(p, "utf-8");
+            return JSON.parse(data);
+        });
 
-        loadBlog();
-    }, [params.slug]);
+        const relatedPosts = allBlogs
+            .filter((b: BlogPost) =>
+                b.slug !== slug &&
+                (b.category === blog.category || b.tags.some((tag: string) => blog.tags.includes(tag)))
+            )
+            .slice(0, 3);
 
-    if (!blog) {
+        return { blog, relatedPosts };
+    } catch (error) {
+        console.error("Error loading blog:", error);
+        return null;
+    }
+}
+
+export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+    const data = await getBlogData(params.slug);
+
+    if (!data || !data.blog) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold text-primary mb-4">Blog post not found</h1>
+                    <Link href="/blog">
+                        <Button>Back to Blog</Button>
+                    </Link>
+                </div>
             </div>
         );
     }
 
-    const relatedPosts = allBlogs
-        .filter((b) => b.category === blog.category || b.tags.some((tag) => blog.tags.includes(tag)))
-        .slice(0, 3);
+    const { blog, relatedPosts } = data;
 
     return (
         <div className="pt-32 pb-24 px-6">
@@ -79,7 +97,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                 </Link>
 
                 {/* Header */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+                <div className="mb-8">
                     <div className="flex items-center gap-3 mb-4">
                         <Badge variant="outline" className="capitalize">
                             {blog.category.replace("-", " ")}
@@ -106,25 +124,15 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                             Share
                         </Button>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Featured Image */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="aspect-video rounded-2xl overflow-hidden mb-12"
-                >
+                <div className="aspect-video rounded-2xl overflow-hidden mb-12">
                     <img src={blog.featuredImage} alt={blog.title} className="w-full h-full object-cover" />
-                </motion.div>
+                </div>
 
                 {/* Content */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="prose prose-lg max-w-none mb-12"
-                >
+                <div className="prose prose-lg max-w-none mb-12">
                     <ReactMarkdown
                         components={{
                             h1: ({ node, ...props }) => <h1 className="text-3xl font-bold text-primary mt-8 mb-4" {...props} />,
@@ -138,7 +146,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                     >
                         {blog.content}
                     </ReactMarkdown>
-                </motion.div>
+                </div>
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-12 pb-12 border-b border-border">
@@ -154,7 +162,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                     <div>
                         <h2 className="text-2xl font-bold text-primary mb-6">Related Articles</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {relatedPosts.map((post) => (
+                            {relatedPosts.map((post: BlogPost) => (
                                 <Link key={post.id} href={`/blog/${post.slug}`}>
                                     <div className="group bg-white rounded-xl overflow-hidden border border-border hover:shadow-lg transition-all">
                                         <div className="aspect-video relative overflow-hidden">

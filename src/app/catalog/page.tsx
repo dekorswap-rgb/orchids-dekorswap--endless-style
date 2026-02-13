@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Search, Filter } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Filter, ChevronDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -26,12 +27,14 @@ interface CatalogData {
 }
 
 export default function CatalogPage() {
+    const searchParams = useSearchParams();
     const [catalogData, setCatalogData] = useState<CatalogData | null>(null);
     const [filteredItems, setFilteredItems] = useState<CatalogItem[]>([]);
     const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
     const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [showFilters, setShowFilters] = useState(false);
 
     useEffect(() => {
         fetch("/data/catalog-items.json")
@@ -39,8 +42,22 @@ export default function CatalogPage() {
             .then((data) => {
                 setCatalogData(data);
                 setFilteredItems(data.items);
+
+                // Apply URL parameters if present
+                const styleParam = searchParams.get("style");
+                const roomParam = searchParams.get("room");
+
+                if (styleParam) {
+                    setSelectedStyle(styleParam);
+                    setShowFilters(true); // Auto-open filters to show what's applied
+                }
+
+                if (roomParam) {
+                    setSelectedRoom(roomParam);
+                    setShowFilters(true); // Auto-open filters to show what's applied
+                }
             });
-    }, []);
+    }, [searchParams]);
 
     useEffect(() => {
         if (!catalogData) return;
@@ -75,11 +92,20 @@ export default function CatalogPage() {
         );
     }
 
+    const activeFiltersCount = [selectedStyle, selectedRoom, selectedCategory].filter(Boolean).length;
+
+    const clearAllFilters = () => {
+        setSelectedStyle(null);
+        setSelectedRoom(null);
+        setSelectedCategory(null);
+        setSearchQuery("");
+    };
+
     return (
         <div className="pt-32 pb-24 px-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="text-center mb-16">
+                <div className="text-center mb-12">
                     <h1 className="text-4xl md:text-6xl font-bold text-primary mb-6">
                         Browse Our Collection
                     </h1>
@@ -88,9 +114,9 @@ export default function CatalogPage() {
                     </p>
                 </div>
 
-                {/* Search */}
-                <div className="mb-8">
-                    <div className="relative max-w-md mx-auto">
+                {/* Search and Filter Toggle */}
+                <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-center">
+                    <div className="relative w-full sm:w-96">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
                         <input
                             type="text"
@@ -100,94 +126,161 @@ export default function CatalogPage() {
                             className="w-full pl-12 pr-4 py-3 rounded-full border border-border focus:outline-none focus:ring-2 focus:ring-accent"
                         />
                     </div>
+                    <Button
+                        variant={activeFiltersCount > 0 ? "default" : "outline"}
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="rounded-full px-6 relative"
+                    >
+                        <Filter className="w-4 h-4 mr-2" />
+                        Filters
+                        {activeFiltersCount > 0 && (
+                            <span className="ml-2 bg-white text-accent w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold">
+                                {activeFiltersCount}
+                            </span>
+                        )}
+                        <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${showFilters ? "rotate-180" : ""}`} />
+                    </Button>
                 </div>
 
-                {/* Filters */}
-                <div className="mb-12 space-y-6">
-                    {/* Styles */}
-                    <div>
-                        <h3 className="text-sm font-bold text-primary mb-3 flex items-center gap-2">
-                            <Filter className="w-4 h-4" />
-                            Filter by Style
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                            <Button
-                                variant={selectedStyle === null ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setSelectedStyle(null)}
-                                className="rounded-full"
-                            >
-                                All Styles
-                            </Button>
-                            {catalogData.styles.map((style) => (
-                                <Button
-                                    key={style.id}
-                                    variant={selectedStyle === style.id ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => setSelectedStyle(style.id)}
-                                    className="rounded-full"
-                                >
-                                    {style.emoji} {style.name}
-                                </Button>
-                            ))}
-                        </div>
-                    </div>
+                {/* Collapsible Filters */}
+                <AnimatePresence>
+                    {showFilters && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="overflow-hidden mb-8"
+                        >
+                            <div className="bg-white rounded-2xl border border-border p-6 space-y-6">
+                                {/* Active Filters Summary */}
+                                {activeFiltersCount > 0 && (
+                                    <div className="flex items-center justify-between pb-4 border-b border-border">
+                                        <div className="flex flex-wrap gap-2">
+                                            {selectedStyle && (
+                                                <Badge className="bg-accent text-white pl-3 pr-2 py-1.5">
+                                                    {catalogData.styles.find(s => s.id === selectedStyle)?.emoji} {catalogData.styles.find(s => s.id === selectedStyle)?.name}
+                                                    <button onClick={() => setSelectedStyle(null)} className="ml-2 hover:bg-white/20 rounded-full p-0.5">
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </Badge>
+                                            )}
+                                            {selectedRoom && (
+                                                <Badge className="bg-accent text-white pl-3 pr-2 py-1.5">
+                                                    {catalogData.rooms.find(r => r.id === selectedRoom)?.emoji} {catalogData.rooms.find(r => r.id === selectedRoom)?.name}
+                                                    <button onClick={() => setSelectedRoom(null)} className="ml-2 hover:bg-white/20 rounded-full p-0.5">
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </Badge>
+                                            )}
+                                            {selectedCategory && (
+                                                <Badge className="bg-accent text-white pl-3 pr-2 py-1.5">
+                                                    {catalogData.categories.find(c => c.id === selectedCategory)?.emoji} {catalogData.categories.find(c => c.id === selectedCategory)?.name}
+                                                    <button onClick={() => setSelectedCategory(null)} className="ml-2 hover:bg-white/20 rounded-full p-0.5">
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-accent hover:text-accent/80">
+                                            Clear All
+                                        </Button>
+                                    </div>
+                                )}
 
-                    {/* Rooms */}
-                    <div>
-                        <h3 className="text-sm font-bold text-primary mb-3">Filter by Room</h3>
-                        <div className="flex flex-wrap gap-2">
-                            <Button
-                                variant={selectedRoom === null ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setSelectedRoom(null)}
-                                className="rounded-full"
-                            >
-                                All Rooms
-                            </Button>
-                            {catalogData.rooms.map((room) => (
-                                <Button
-                                    key={room.id}
-                                    variant={selectedRoom === room.id ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => setSelectedRoom(room.id)}
-                                    className="rounded-full"
-                                >
-                                    {room.emoji} {room.name}
-                                </Button>
-                            ))}
-                        </div>
-                    </div>
+                                {/* Filter Groups */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {/* Styles */}
+                                    <div>
+                                        <h3 className="text-sm font-bold text-primary mb-3">Style</h3>
+                                        <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                                            <button
+                                                onClick={() => setSelectedStyle(null)}
+                                                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${selectedStyle === null
+                                                    ? "bg-accent text-white"
+                                                    : "hover:bg-accent/5"
+                                                    }`}
+                                            >
+                                                All Styles
+                                            </button>
+                                            {catalogData.styles.map((style) => (
+                                                <button
+                                                    key={style.id}
+                                                    onClick={() => setSelectedStyle(style.id)}
+                                                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${selectedStyle === style.id
+                                                        ? "bg-accent text-white"
+                                                        : "hover:bg-accent/5"
+                                                        }`}
+                                                >
+                                                    {style.emoji} {style.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
 
-                    {/* Categories */}
-                    <div>
-                        <h3 className="text-sm font-bold text-primary mb-3">Filter by Category</h3>
-                        <div className="flex flex-wrap gap-2">
-                            <Button
-                                variant={selectedCategory === null ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setSelectedCategory(null)}
-                                className="rounded-full"
-                            >
-                                All Categories
-                            </Button>
-                            {catalogData.categories.map((category) => (
-                                <Button
-                                    key={category.id}
-                                    variant={selectedCategory === category.id ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => setSelectedCategory(category.id)}
-                                    className="rounded-full"
-                                >
-                                    {category.emoji} {category.name}
-                                </Button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                                    {/* Rooms */}
+                                    <div>
+                                        <h3 className="text-sm font-bold text-primary mb-3">Room</h3>
+                                        <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                                            <button
+                                                onClick={() => setSelectedRoom(null)}
+                                                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${selectedRoom === null
+                                                    ? "bg-accent text-white"
+                                                    : "hover:bg-accent/5"
+                                                    }`}
+                                            >
+                                                All Rooms
+                                            </button>
+                                            {catalogData.rooms.map((room) => (
+                                                <button
+                                                    key={room.id}
+                                                    onClick={() => setSelectedRoom(room.id)}
+                                                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${selectedRoom === room.id
+                                                        ? "bg-accent text-white"
+                                                        : "hover:bg-accent/5"
+                                                        }`}
+                                                >
+                                                    {room.emoji} {room.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Categories */}
+                                    <div>
+                                        <h3 className="text-sm font-bold text-primary mb-3">Category</h3>
+                                        <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                                            <button
+                                                onClick={() => setSelectedCategory(null)}
+                                                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${selectedCategory === null
+                                                    ? "bg-accent text-white"
+                                                    : "hover:bg-accent/5"
+                                                    }`}
+                                            >
+                                                All Categories
+                                            </button>
+                                            {catalogData.categories.map((category) => (
+                                                <button
+                                                    key={category.id}
+                                                    onClick={() => setSelectedCategory(category.id)}
+                                                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${selectedCategory === category.id
+                                                        ? "bg-accent text-white"
+                                                        : "hover:bg-accent/5"
+                                                        }`}
+                                                >
+                                                    {category.emoji} {category.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Results Count */}
-                <div className="mb-6">
+                <div className="mb-6 flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">
                         Showing {filteredItems.length} of {catalogData.items.length} items
                     </p>
@@ -200,14 +293,14 @@ export default function CatalogPage() {
                             key={item.id}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            className="group bg-white rounded-2xl overflow-hidden border border-border hover:shadow-xl transition-all"
+                            transition={{ delay: index * 0.05, duration: 0.4, ease: "easeOut" }}
+                            className="group bg-white rounded-2xl overflow-hidden border border-border hover:shadow-xl transition-all duration-300"
                         >
                             <div className="aspect-square relative overflow-hidden">
                                 <img
                                     src={item.imageUrl}
                                     alt={item.name}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 />
                                 {item.availability === "coming-soon" && (
                                     <div className="absolute top-3 right-3">
@@ -216,7 +309,7 @@ export default function CatalogPage() {
                                 )}
                             </div>
                             <div className="p-4">
-                                <h3 className="font-bold text-primary mb-2 group-hover:text-accent transition-colors">
+                                <h3 className="font-bold text-primary mb-2 group-hover:text-accent transition-colors duration-300">
                                     {item.name}
                                 </h3>
                                 <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
@@ -241,12 +334,7 @@ export default function CatalogPage() {
                     <div className="text-center py-20">
                         <p className="text-lg text-muted-foreground mb-4">No items found matching your filters.</p>
                         <Button
-                            onClick={() => {
-                                setSelectedStyle(null);
-                                setSelectedRoom(null);
-                                setSelectedCategory(null);
-                                setSearchQuery("");
-                            }}
+                            onClick={clearAllFilters}
                             variant="outline"
                             className="rounded-full"
                         >

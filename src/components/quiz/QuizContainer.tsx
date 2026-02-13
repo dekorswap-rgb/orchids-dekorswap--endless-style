@@ -92,6 +92,15 @@ export default function QuizContainer() {
     };
 
     if (showResults) {
+        // Save quiz results to localStorage for later use
+        if (typeof window !== 'undefined') {
+            const quizResults = {
+                topStyle: Object.entries(styleScores).sort(([, a], [, b]) => b - a)[0]?.[0],
+                room: answers["q1"],
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('dekorswap_quiz_results', JSON.stringify(quizResults));
+        }
         return <QuizResults styleScores={styleScores} styles={quizData.styles} answers={answers} />;
     }
 
@@ -118,14 +127,13 @@ export default function QuizContainer() {
                     </div>
                 </div>
 
-                {/* Question */}
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentQuestionId}
                         initial={{ opacity: 0, x: direction * 50 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: direction * -50 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.5, ease: "easeInOut" }}
                         className="mb-12"
                     >
                         <div className="text-center mb-12">

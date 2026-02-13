@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, Info, ArrowRight } from "lucide-react";
+import { Check, Info, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +14,7 @@ import {
 
 const tiers = [
   {
+    id: "starter",
     name: "Starter",
     price: "₹3,999",
     description: "Perfect for smaller spaces or those just starting their décor journey.",
@@ -23,10 +25,10 @@ const tiers = [
       "Easy 1-click swaps",
       "Cancel anytime"
     ],
-    cta: "Start with Starter",
     popular: false
   },
   {
+    id: "standard",
     name: "Standard",
     price: "₹6,999",
     description: "Our most popular plan, designed for a full-room refresh every month.",
@@ -38,10 +40,10 @@ const tiers = [
       "Styling consultation (15m)",
       "Swap 2x per month"
     ],
-    cta: "Go Standard",
     popular: true
   },
   {
+    id: "premium",
     name: "Premium",
     price: "₹11,999",
     description: "The ultimate décor experience for large spaces and design enthusiasts.",
@@ -53,7 +55,6 @@ const tiers = [
       "Unlimited monthly swaps",
       "Early access to new drops"
     ],
-    cta: "Get Premium",
     popular: false
   }
 ];
@@ -77,7 +78,69 @@ const faqs = [
   }
 ];
 
+// Room name mapping
+const roomNames: Record<string, string> = {
+  "living-room": "Living Room",
+  "bedroom": "Bedroom",
+  "home-office": "Home Office",
+  "dining-room": "Dining Room"
+};
+
+// Style name mapping
+const styleNames: Record<string, string> = {
+  "japandi": "Japandi",
+  "mid-century": "Mid-Century Modern",
+  "scandinavian": "Scandinavian",
+  "bohemian": "Bohemian",
+  "minimalist": "Minimalist",
+  "modern-farmhouse": "Modern Farmhouse",
+  "industrial": "Industrial"
+};
+
 export default function Pricing() {
+  const [quizData, setQuizData] = useState<any>(null);
+
+  useEffect(() => {
+    // Load quiz results from localStorage
+    if (typeof window !== 'undefined') {
+      const savedQuiz = localStorage.getItem('dekorswap_quiz_results');
+      if (savedQuiz) {
+        try {
+          setQuizData(JSON.parse(savedQuiz));
+        } catch (e) {
+          console.error('Error parsing quiz data:', e);
+        }
+      }
+    }
+  }, []);
+
+  const handleContactWhatsApp = (tier: typeof tiers[0]) => {
+    // Build personalized WhatsApp message
+    let message = `Hi! I'm interested in the *${tier.name} Plan* (${tier.price}/month).`;
+
+    // Add quiz information if available
+    if (quizData) {
+      const styleName = styleNames[quizData.topStyle] || quizData.topStyle;
+      const roomName = roomNames[quizData.room] || quizData.room;
+
+      message += `\n\nI recently took your style quiz and my results were:`;
+      message += `\n• Style Match: ${styleName}`;
+      message += `\n• Room: ${roomName}`;
+    }
+
+    message += `\n\nI'd love to learn more about how DekorSwap can help transform my space!`;
+
+    // Encode message for URL
+    const encodedMessage = encodeURIComponent(message);
+
+    // Replace with your actual WhatsApp business number
+    const whatsappNumber = "919996234649"; // Update this with your actual number
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+
+    // Open WhatsApp in new tab
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <div className="pt-32 pb-24 px-6">
       <div className="max-w-7xl mx-auto">
@@ -105,6 +168,21 @@ export default function Pricing() {
           >
             Choose the plan that fits your space. No hidden fees. Cancel anytime.
           </motion.p>
+
+          {/* Quiz Results Banner */}
+          {quizData && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full text-sm"
+            >
+              <span className="text-accent font-semibold">✨ Your Style:</span>
+              <span className="text-primary font-bold">{styleNames[quizData.topStyle] || quizData.topStyle}</span>
+              <span className="text-muted-foreground">•</span>
+              <span className="text-primary">{roomNames[quizData.room] || quizData.room}</span>
+            </motion.div>
+          )}
         </div>
 
         {/* Pricing Tiers */}
@@ -116,8 +194,8 @@ export default function Pricing() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               className={`relative flex flex-col p-8 rounded-3xl border-2 transition-all ${tier.popular
-                  ? "border-accent bg-white shadow-2xl scale-105 z-10"
-                  : "border-border bg-brand-offwhite/50 hover:border-accent/30"
+                ? "border-accent bg-white shadow-2xl scale-105 z-10"
+                : "border-border bg-brand-offwhite/50 hover:border-accent/30"
                 }`}
             >
               {tier.popular && (
@@ -155,10 +233,12 @@ export default function Pricing() {
               <Button
                 size="lg"
                 variant={tier.popular ? "default" : "outline"}
+                onClick={() => handleContactWhatsApp(tier)}
                 className={`w-full rounded-full h-14 font-bold ${tier.popular ? "bg-accent hover:bg-accent/90" : "border-primary/20 hover:bg-primary/5 text-primary"
                   }`}
               >
-                {tier.cta}
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Contact Us on WhatsApp
               </Button>
             </motion.div>
           ))}
@@ -210,10 +290,19 @@ export default function Pricing() {
           <div className="mt-20 text-center p-12 bg-accent/5 rounded-[2rem] border border-accent/10">
             <h3 className="text-2xl font-bold text-primary mb-4">Still have questions?</h3>
             <p className="text-muted-foreground mb-8">We're here to help you create your dream home.</p>
-            <Button variant="link" className="text-accent font-bold text-lg group" asChild>
-              <a href="mailto:dekorswap+support@gmail.com">
-                Contact our support team <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </a>
+            <Button
+              variant="default"
+              className="bg-accent hover:bg-accent/90 rounded-full px-8 h-12 font-bold group"
+              onClick={() => {
+                const message = quizData
+                  ? `Hi! I have some questions about DekorSwap.\n\nMy quiz results: ${styleNames[quizData.topStyle]} style for ${roomNames[quizData.room]}.`
+                  : "Hi! I have some questions about DekorSwap.";
+                const whatsappUrl = `https://wa.me/919876543210?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+              }}
+            >
+              <MessageCircle className="w-5 h-5 mr-2" />
+              Chat with us on WhatsApp
             </Button>
           </div>
         </section>
