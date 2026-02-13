@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, ChevronDown, X } from "lucide-react";
@@ -26,7 +26,7 @@ interface CatalogData {
     styles: Array<{ id: string; name: string; emoji: string }>;
 }
 
-export default function CatalogPage() {
+function CatalogContent() {
     const searchParams = useSearchParams();
     const [catalogData, setCatalogData] = useState<CatalogData | null>(null);
     const [filteredItems, setFilteredItems] = useState<CatalogItem[]>([]);
@@ -344,5 +344,17 @@ export default function CatalogPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function CatalogPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+            </div>
+        }>
+            <CatalogContent />
+        </Suspense>
     );
 }
